@@ -1,0 +1,71 @@
+<!-- app/templates/auth/user.html -->
+<!-- this form is used for adding a user as well for editing a user, hence the if-clause -->
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "bootstrap/utils.html" as utils %}
+{% extends "base.html" %}
+
+{% block content2 %}
+<div class="content-section">
+  {{ utils.flashed_messages() }}
+    <div class="center">
+        <h1>Instellingen</h1>
+        <form method="post" enctype=multipart/form-data>
+            {% if current_user.is_admin %}
+                <input id="upload_trigger" type="submit" value="Import" style="display:none" formaction="{{ url_for('settings.upload_file') }}">
+                <input class="btn btn-default" type="button" id="import" value="Importeer studenten"  onclick="$('#import_fileid').click();">
+                <input id='import_fileid' type='file' name='upload_students' style="display:none" accept=".csv" onchange="$('#upload_trigger').click();">
+                <input class="btn btn-default" type="submit" id="export" value="Exporteer registraties"  formaction="{{url_for('settings.exportcsv')}}">
+            {% endif %}
+        </form>
+        <br/>
+        <br/>
+        <br/>
+        <form action="{{ url_for('settings.save')}}" method="post" class="form" role="form"  enctype=multipart/form-data>
+            {% if current_user.is_admin %}
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-sm-1">
+                            <input type="text" class="form-control" id="schoolyear" name="schoolyear" value="{{ schoolyear }}">
+                        </div>
+                        <label for="schoolyear" class="col-sm-2 control-label">: Huidig schooljaar </label>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-1">
+                            <input type="text" class="form-control" id="simulate_dayhour" name="simulate_dayhour" value="{{ simulate_dayhour }}">
+                        </div>
+                        <label for="simulate_dayhour" class="col-sm-2 control-label">Simuleer een lesuur </label>
+                    </div>
+                </div>
+            {% endif %}
+
+<!--
+             <input id='purge_database' type="submit" name='purge_database' style="display:none"  formaction="{{ url_for('settings.purge_database') }}"/>
+-->        <input class="btn btn-default" id="submit" name="button" type="submit" value="Bewaar">
+
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+
+
+{% block scripts %}
+{{ super() }}
+<script>
+//Before removing an entry, a confirm-box is shown.
+function confirm_before_delete(e) {
+    e.preventDefault();
+    var message = "Bent u zeker dat u deze items wil verwijderen?";
+    bootbox.confirm(message, function(result) {
+        if (result) {
+            $('#purge_database').val(e.srcElement.id);
+            console.log(e.srcElement.id);
+            $('#purge_database').click();
+        }
+    });
+}
+</script>
+
+{% endblock %}
