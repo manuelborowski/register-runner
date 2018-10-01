@@ -33,6 +33,19 @@ def registrations():
                            config = tables_configuration['registration'])
 
 
+
+#show a list of registrations
+@registration.route('/registration/new_rfid/<int:id>/<string:result>', methods=['GET', 'POST'])
+@login_required
+def new_rfid(id, result):
+    #The following line is required only to build the filter-fields on the page.
+    
+    _filter, _filter_form, a,b, c = build_filter(tables_configuration['registration'])
+    return render_template('base_multiple_items.html',
+                           title='registraties',
+                           filter=_filter, filter_form=_filter_form,
+                           config = tables_configuration['registration'])
+
 #show a list of registrations
 @registration.route('/registration', methods=['GET', 'POST'])
 @login_required

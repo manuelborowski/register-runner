@@ -6,6 +6,7 @@ fmi_copy = {"menu_id": "copy_menu_item", "menu_text": "Kopieer van", "route": "a
 fmi_add = {"menu_id": "add_menu_item", "menu_text": "Voeg toe", "route": "add", "flags": []}
 fmi_view = {"menu_id": "view_menu_item", "menu_text": "Details", "route": "view", "flags": ["id_required"]}
 fmi_change_pwd = {"menu_id": "change_pwd_menu_item", "menu_text": "Verander paswoord", "route": "change_pwd","flags": ["id_required"]}
+fmi_update_rfid = {"menu_id": "update_rfid_menu_item", "menu_text": "Nieuwe code", "route": "new_rfid","flags": ["bootbox_single"]}
 
 default_menu_config = [
     fmi_edit,
@@ -31,4 +32,8 @@ admin_menu_config = [
 
 offence_menu_config = [
     fmi_delete
+]
+
+register_runner_menu_config = [
+fmi_update_rfid
 ]

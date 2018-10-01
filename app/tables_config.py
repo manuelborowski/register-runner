@@ -2,7 +2,7 @@
 
 from models import User, Registration, Series
 import user.extra_filtering
-from floating_menu import default_menu_config, offence_menu_config
+from floating_menu import default_menu_config, register_runner_menu_config
 
 tables_configuration = {
     'registration' : {
@@ -22,7 +22,7 @@ tables_configuration = {
                       ],
         'filter' :  [],
         'href': [],
-        'floating_menu' : offence_menu_config,
+        'floating_menu' : register_runner_menu_config,
         'disable_add_button' : True,
         #'export' : 'asset.exportcsv',
     },
