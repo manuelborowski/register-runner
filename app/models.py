@@ -113,6 +113,6 @@ class Registration(db.Model):
     def ret_dict(self):
         return {'id':self.id, 'first_name':self.first_name, 'last_name': self.last_name, 'classgroup': self.classgroup,
                 'full_name': u'{} {}'.format(self.first_name, self.last_name), 'rfidcode': self.rfidcode, 'rfidcode2': self.rfidcode2,
-                'studentcode': self.studentcode, 'time_ran': self.time_ran}
+                'studentcode': self.studentcode, 'time_ran': self.time_ran, 'series': self.series.ret_dict()}
 
 

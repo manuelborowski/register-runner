@@ -11,6 +11,7 @@ from flask_bootstrap import Bootstrap
 from flask_jsglue import JSGlue
 from werkzeug.routing import IntegerConverter as OrigIntegerConvertor
 import config, logging, logging.handlers, os, sys
+import flask_excel as excel
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -70,6 +71,7 @@ def create_app(config_name):
     jsglue = JSGlue(app)
     db.app=app  # hack :-(
     db.init_app(app)
+    excel.init_excel(app)
 
     app.url_map.converters['int'] = IntegerConverter
 
