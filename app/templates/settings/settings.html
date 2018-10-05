@@ -12,10 +12,11 @@
         <h1>Instellingen</h1>
         <form method="post" enctype=multipart/form-data>
             {% if current_user.is_admin %}
-                <input id="upload_trigger" type="submit" value="Import" style="display:none" formaction="{{ url_for('settings.upload_file') }}">
                 <input class="btn btn-default" type="button" id="import" value="Importeer studenten"  onclick="$('#import_fileid').click();">
                 <input id='import_fileid' type='file' name='upload_students' style="display:none" accept=".xlsm,.xlsx" onchange="$('#upload_trigger').click();">
+                <input id="upload_trigger" type="submit" value="Import" style="display:none" formaction="{{ url_for('settings.upload_file') }}">
                 <input class="btn btn-default" type="submit" id="export" value="Exporteer registraties"  formaction="{{url_for('settings.exportcsv')}}">
+                <input class="btn btn-default" type="button" value="Purge database" onclick="confirm_before_delete()">
             {% endif %}
         </form>
         <br/>
@@ -39,9 +40,8 @@
                 </div>
             {% endif %}
 
-<!--
-             <input id='purge_database' type="submit" name='purge_database' style="display:none"  formaction="{{ url_for('settings.purge_database') }}"/>
--->        <input class="btn btn-default" id="submit" name="button" type="submit" value="Bewaar">
+
+            <input class="btn btn-default" id="submit" name="button" type="submit" value="Bewaar">
 
 
         </form>
@@ -56,13 +56,9 @@
 <script>
 //Before removing an entry, a confirm-box is shown.
 function confirm_before_delete(e) {
-    e.preventDefault();
-    var message = "Bent u zeker dat u deze items wil verwijderen?";
-    bootbox.confirm(message, function(result) {
+    bootbox.confirm("Bent u zeker dat u de database wil leeg maken?", function(result) {
         if (result) {
-            $('#purge_database').val(e.srcElement.id);
-            console.log(e.srcElement.id);
-            $('#purge_database').click();
+            window.location.href = Flask.url_for('settings.purge_database')
         }
     });
 }

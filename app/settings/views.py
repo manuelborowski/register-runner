@@ -42,16 +42,12 @@ def save():
 @login_required
 def purge_database():
     try:
-        if 'delete_list' in request.form:
-            pass
-            # for d in document_type_list:
-            #     if d in request.form['delete_doc']:
-            #         if get_doc_select(d) in request.form:
-            #             for i in request.form.getlist(get_doc_select(d)):
-            #                 os.remove(os.path.join(get_doc_path(d), i))
+        Registration.query.delete()
+        Series.query.delete()
+        db.session.commit()
     except Exception as e:
         flash('Kan niet verwijderen...')
-    return redirect(url_for('admin.show'))
+    return redirect(url_for('settings.show'))
 
 
 @settings.route('/settings/upload_file', methods=['GET', 'POST'])

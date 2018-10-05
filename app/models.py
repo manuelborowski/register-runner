@@ -85,6 +85,7 @@ class Series(db.Model):
     name = db.Column(db.String(256))
     sequence = db.Column(db.Integer)
     starttime = db.Column(db.DateTime())
+    running = db.Column(db.Boolean, default=False)
     registration = db.relationship('Registration', cascade='all, delete', backref='series', lazy='dynamic')
 
     def __repr__(self):

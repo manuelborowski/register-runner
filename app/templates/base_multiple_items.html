@@ -97,13 +97,13 @@ var floating_menu = JSON.parse('{{config.floating_menu|tojson}}');
 function handle_floating_menu(menu_id) {
     console.log(menu_id + ' : ' + row_id);
     for(var i=0; i < floating_menu.length; i++) {
-        menu_route = floating_menu[i].route
         if(floating_menu[i].menu_id == menu_id) {
             if(floating_menu[i].flags.includes('confirm_before_delete')) {
-                confirm_before_delete(row_id);
+                confirm_before_delete(row_id, floating_menu[i].route, floating_menu[i].message);
             } else if(floating_menu[i].flags.includes('id_required')) {
                 window.location.href=Flask.url_for('{{config.subject}}.' + floating_menu[i].route, {'id':row_id});
             } else if(floating_menu[i].flags.includes('bootbox_single')) {
+                menu_route = floating_menu[i].route
                 bootbox.prompt(floating_menu[i].menu_text, function(result){
                     if (result) {
                         window.location.href = Flask.url_for('{{config.subject}}.' + menu_route, {'id': row_id, 'result': result});
@@ -117,12 +117,10 @@ function handle_floating_menu(menu_id) {
 }
 
 //Before removing an entry, a confirm-box is shown.
-function confirm_before_delete(id) {
-    var message = "Are you sure want to delete this " + '{{config.subject}}' + "?";
-    if ('{{ config.delete_message }}') {message='{{ config.delete_message }}';}
+function confirm_before_delete(id, route, message) {
     bootbox.confirm(message, function(result) {
         if (result) {
-            window.location.href = Flask.url_for('{{config.subject}}' + ".delete", {'id' : id})
+            window.location.href = Flask.url_for('{{config.subject}}' + "." + route, {'id' : id})
         }
     });
 }

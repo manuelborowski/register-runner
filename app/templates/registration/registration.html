@@ -9,78 +9,61 @@
  <div class="content-section">
   {{ utils.flashed_messages() }}
     <div class="center">
-        <form method="post" enctype=multipart/form-data action="{{ url_for('registration.register') }}">
-            <div class="container">
+        <div class="container">
+            <div class="col-sm-3">
                 <div class="form-group row">
-                    <div class="col-sm-3">
-                        <label for="code" id="code_label">{% if registration_id > -1 %}Computercode (of leerlingcode) {% else %}Leerlingcode{% endif %}</label>
-                        <input type="text" class="form-control" id="code" name="code" value="{{barcode}}" {% if not new_student %}autofocus{% endif %}>
-                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr><th>Reeks</th><th>Timer</th><th>Tijd</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for s in series %}
+                            <tr>
+                                <td>{{s.name}}</td>
+                                <<td>
+                                    <a id="start_{{s.id}}" href="javascript:start_timer({{s.id}})" style="color:{% if s.running %}red{% else %}green{% endif %}">
+                                        START</a>
+                                    <a id="reset_{{s.id}}" href="javascript:reset_timer({{s.id}})" style="color:black">
+                                        RESET</a>
+                                </td>
+                                <td><div id="timer_{{s.id}}">{{s.current_time}}</div></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                     </table>
                 </div>
-                {% if new_student %}
-                <div class="panel panel-default">
-                    <div class="panel-heading">Nieuwe leerling</div>
-                    <div class="panel-body">
-                        <div class="form-group row">
-                            <div class="col-sm-4">
-                                <label for="code">Achternaam</label>
-                                <input type="text" class="form-control" id="new_last_name" name="new_last_name" {% if new_student %}autofocus{% endif %}>
-                            </div>
-                            <div class="col-sm-4">
-                                <label for="code">Voornaam</label>
-                                <input type="text" class="form-control" id="new_first_name" name="new_first_name">
-                            </div>
-                            <div class="col-sm-2">
-                                <label for="code">klas</label>
-                                <input type="text" class="form-control" id="new_classgroup" name="new_classgroup">
-                            </div>
-                        </div>
-                        <div class="btn-group">
-                            <input class="btn btn-default" type="submit" id="add_student" name="add_student" value="Bewaar">
-                            <input class="btn btn-default" type="submit" id="cancel_student" name="add_student" value="Annuleer">
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                {% if registration_id > -1 %}
+
                 <div class="form-group row">
-                    <div class="col-sm-1">
-                        <label for="student_code">Code</label>
-                        <input type="text" class="form-control" id="student_code" name="student_code" value="{{ student_code }}" readonly>
-                    </div>
-                    <div class="col-sm-4">
-                        <label for="name">Naam</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{ student_name }}" readonly>
-                    </div>
-                    <div class="col-sm-2">
-                        <label for="classgroup">Klas</label>
-                        <input type="text" class="form-control" id="classgroup" name="classgroup" value="{{ classgroup }}" readonly>
-                    </div>
+                    <form method="post" enctype=multipart/form-data accept-charset="UTF-8" action="{{ url_for('registration.register') }}">
+                        <label for="code" id="code_label">Leerlingcode</label>
+                        <input type="text" class="form-control" id="code" name="code" value="{{barcode}}" autofocus>
+                        <input class="btn btn-default" type="submit" id="register" style="display: none;" value="TEST">
+                    </form>
                 </div>
-                {% endif %}
             </div>
-            <input type="hidden" id="custId" name="registration_id" value="{{ registration_id }}">
-            <!--<input class="btn btn-default" type="submit" id="register" style="display: none;" value="TEST">-->
-            <!-- When testing with selenium, remove the style="display: none" -->
-            <input class="btn btn-default" type="submit" id="register" style="display: none;" value="TEST">
-        </form>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Code</th><th>Naam</th><th>Klas</th><th>Computer</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for r in registrations %}
-            <tr>
-                <td>{{r.student_code}}</td>
-                <td>{{r.first_name}} {{r.last_name}}</td>
-                <td>{{r.classgroup}}</td>
-                <td>{{r.computer_code}}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+
+            <div class="col-sm-1"></div>
+
+            <div class="col-sm-6">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Naam</th><th>Klas</th><th>Reeks</th><th>Tijd</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for r in registrations %}
+                        <tr>
+                            <td>{{r.student_code}}</td>
+                            <td>{{r.first_name}} {{r.last_name}}</td>
+                            <td>{{r.classgroup}}</td>
+                            <td>{{r.computer_code}}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
  </div>
 {% endblock %}
@@ -89,13 +72,50 @@
 {{ super() }}
 <script>
     //when enter is pressed in the code field, a click on the button is simulated
-    var input = document.getElementById("code");
-    input.addEventListener("keyup", function(event) {
-    event.preventDefault();
-    if (event.keyCode === 13) {
-        document.getElementById("register").click();
+    //Not required anymore??
+    var input = document.getElementById("dummy");
+    if(input) {
+        input.addEventListener("keyup", function(event) {
+            event.preventDefault();
+
+            console.log(event.keyCode)
+
+            if (event.keyCode === 13) {
+                document.getElementById("register").click();
+            }
+        });
     }
-});
+
+    var time_interval = setInterval(get_timer_value, 1000);
+    function get_timer_value() {
+        $.getJSON(Flask.url_for('registration.get_timer'), function(data) {
+            $.each( data, function( key, val ) {
+                $('#timer_' + key).html(val);
+            });
+        });
+  }
+
+    function start_timer(id) {
+        $.getJSON(Flask.url_for('registration.start', {'id': id}));
+        $('#start_' + id).css("color", "red");
+        get_timer_value();
+        $("#code").focus();
+    }
+    function reset_timer(id) {
+        bootbox.confirm("Bent u zeker dat u de timer wilt resetten?", function(result) {
+            if(result) {
+                $.getJSON(Flask.url_for('registration.reset', {'id': id}));
+                $('#start_' + id).css("color", "green");
+                get_timer_value();
+            }
+             setTimeout(function() {
+                $("#code").focus();
+                }, 150);
+         });
+    }
+
+    $(window).load(get_timer_value())
+
 </script>
 
 {% endblock %}

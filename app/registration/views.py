@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # app/asset/views.py
 
-from flask import render_template, redirect, url_for, request, flash, send_file, session
+from flask import render_template, redirect, url_for, request, flash, send_file, session, jsonify
 from flask_login import login_required, current_user
 
 from .. import db, log
 from . import registration
-from ..models import  Registration
+from ..models import  Registration, Series
 
 from ..base import build_filter, get_ajax_table
 from ..tables_config import  tables_configuration
@@ -32,36 +32,160 @@ def registrations():
                            filter=_filter, filter_form=_filter_form,
                            config = tables_configuration['registration'])
 
+#start timer
+@registration.route('/registration/start/<int:id>', methods=['GET', 'POST'])
+@login_required
+def start(id):
+    try:
+        series = Series.query.get(id)
+        if not series.running:
+            series.running = True
+            series.starttime = datetime.datetime.now()
+            db.session.commit()
+    except Exception as e:
+        log.error('cannot start timer of series : {} error {}'.format(series.name, e))
+    return jsonify('ok')
+
+#stop timer
+@registration.route('/registration/reset/<int:id>', methods=['GET', 'POST'])
+@login_required
+def reset(id):
+    try:
+        series = Series.query.get(id)
+        series.running = False
+        db.session.commit()
+    except Exception as e:
+        log.error('cannot start/stop timer of series : {} error {}'.format(series.name, e))
+    return jsonify('ok')
 
 
-#show a list of registrations
+
+#Get the timer values for the different series
+@registration.route('/registration/get_timer', methods=['GET', 'POST'])
+@login_required
+def get_timer():
+    t = {}
+    series = Series.query.order_by(Series.sequence).all()
+    nw = datetime.datetime.now()
+    for s in series:
+        if s.running:
+            d = (nw - s.starttime)
+            m  = int(d.seconds/60)
+            sec = d.seconds - m * 60 + 1
+            if d.days < 0:
+                m = 0
+                sec = 1
+            if sec > 59:
+                m += 1
+                sec = 0
+            t[s.id] = '{:02d}:{:02d}'.format(m, sec)
+        else:
+            t[s.id] = '00:00'
+    return jsonify(t)
+
+
+
+
+
+#give a student a new rfid code
 @registration.route('/registration/new_rfid/<int:id>/<string:result>', methods=['GET', 'POST'])
 @login_required
 def new_rfid(id, result):
-    #The following line is required only to build the filter-fields on the page.
-    
+    try:
+        is_rfid_code, code = decode_code(result)
+        if is_rfid_code:
+            registration = Registration.query.get(id)
+            registration.rfidcode2 = code
+            db.session.commit()
+    except Exception as e:
+        flash('Kan nieuwe RFID niet opslaan')
+        log.error('cannot update rfid code: {}'.format(e))
+
     _filter, _filter_form, a,b, c = build_filter(tables_configuration['registration'])
     return render_template('base_multiple_items.html',
                            title='registraties',
                            filter=_filter, filter_form=_filter_form,
                            config = tables_configuration['registration'])
 
+#delete the rfid code of a student
+@registration.route('/registration/delete_rfid/<int:id>', methods=['GET', 'POST'])
+@login_required
+def delete_rfid(id):
+    try:
+        registration = Registration.query.get(id)
+        registration.rfidcode2 = None
+        db.session.commit()
+    except Exception as e:
+        flash('Kan RFID niet verwijderen')
+        log.error('cannot delete rfid code: {}'.format(e))
+
+    _filter, _filter_form, a,b, c = build_filter(tables_configuration['registration'])
+    return render_template('base_multiple_items.html',
+                           title='registraties',
+                           filter=_filter, filter_form=_filter_form,
+                           config = tables_configuration['registration'])
+
+def decode_code(code):
+    def decode_caps_lock(code):
+        out = u''
+        dd = {u'&': '1', u'É': '2', u'"': '3', u'\'': '4', u'(': '5', u'§': '6', u'È': '7', u'!': '8', u'Ç': '9',
+              u'À': '0', u'Q': 'A'}
+        for i in code:
+            out += dd[i]
+        return out
+
+    is_rfid_code = True
+    code = code.upper()
+    if code[0] in u'&É"\'(§È!ÇÀABCDEF':
+        code = decode_caps_lock(code)
+    try:
+        int_code = int(code)
+        if len(code) == 8:
+            #code is already a hex code with decimals only
+            pass
+        else:
+            if int_code < 100000:
+                #student code
+                is_rfid_code = False
+            else:
+                #a decimal number that needs to be converted
+                h = '{:0>8}'.format(hex(int_code).split('x')[-1].upper())
+                code = h[6:8] + h[4:6] + h[2:4] + h[0:2]
+    except:
+        #the code contains hex characters, hence is already correct
+        pass
+    return is_rfid_code, code
+
 #show a list of registrations
 @registration.route('/registration', methods=['GET', 'POST'])
 @login_required
 def register():
-    registration_id = -1   #user should enter a student code
-    student_name = ''
-    barcode = ''
-    new_student = False
-    classgroup = ''
-    student_code = ''
+
+    try:
+        if 'code' in request.form:
+            is_rfid_code, code = decode_code(request.form['code'])
+            print('{} {}'.format(is_rfid_code, code))
+
+            if is_rfid_code:
+                reg = Registration.query.filter(Registration.rfidcode2 == code).first()
+                if not reg:
+                    Registration.query.filter(Registration.rfidcode == code).first()
+            else:
+                reg = Registration.query.filter(Registration.studentcode == code).first()
+            if reg:
+                print(reg)
+    except:
+        pass
+
+
+    series = Series.query.order_by(Series.sequence).all()
     #
     # try:
     #     if 'code' in request.form:
     #         code = request.form['code'].upper()
     #         if 'add_student' in request.form:
-    #             if request.form['add_student']=='Bewaar': #save new student
+    #             if request.form['add_student']=='Bewaar': #s
+    # ave new student
     #                 first_name = request.form['new_first_name']
     #                 last_name = request.form['new_last_name']
     #                 classgroup = request.form['new_classgroup']
@@ -126,21 +250,10 @@ def register():
     #     log.warning(u'unknow error : {}'.format(e))
     #     registration_id = -1
 
-    if registration_id == -1:
-        student_name = ''
-        barcode = ''
-        new_student = False
-        classgroup = ''
-        student_code = ''
-        registrations=[]
+    registrations=[]
 
 #    registrations = Registration.query.filter(Registration.computer_code<>'', Registration.user_id==current_user.id).order_by(Registration.timestamp.desc()).all()
     return render_template('registration/registration.html',
-                           barcode=barcode,
-                           registration_id=registration_id,
-                           new_student=new_student,
-                           student_name=student_name,
-                           classgroup=classgroup,
-                           student_code=student_code,
+                           series = series,
                            registrations=registrations)
 
