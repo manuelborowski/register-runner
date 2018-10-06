@@ -83,22 +83,19 @@ def get_timer():
             t[s.id] = '00:00'
     return jsonify(t)
 
-
-
-
-
 #give a student a new rfid code
 @registration.route('/registration/new_rfid/<int:id>/<string:result>', methods=['GET', 'POST'])
 @login_required
 def new_rfid(id, result):
     try:
-        is_rfid_code, code = decode_code(result)
-        if is_rfid_code:
+        is_valide_code, is_rfid_code, code = process_code(result)
+        if is_rfid_code and is_valide_code:
             registration = Registration.query.get(id)
             registration.rfidcode2 = code
             db.session.commit()
     except Exception as e:
-        flash('Kan nieuwe RFID niet opslaan')
+        db.session.rollback()
+        flash('Kan nieuwe RFID niet opslaan of RFID bestaat al')
         log.error('cannot update rfid code: {}'.format(e))
 
     _filter, _filter_form, a,b, c = build_filter(tables_configuration['registration'])
@@ -125,36 +122,25 @@ def delete_rfid(id):
                            filter=_filter, filter_form=_filter_form,
                            config = tables_configuration['registration'])
 
-def decode_code(code):
-    def decode_caps_lock(code):
-        out = u''
-        dd = {u'&': '1', u'É': '2', u'"': '3', u'\'': '4', u'(': '5', u'§': '6', u'È': '7', u'!': '8', u'Ç': '9',
-              u'À': '0', u'Q': 'A'}
-        for i in code:
-            out += dd[i]
-        return out
-
-    is_rfid_code = True
-    code = code.upper()
-    if code[0] in u'&É"\'(§È!ÇÀABCDEF':
-        code = decode_caps_lock(code)
+#delete the time ran of a student
+@registration.route('/registration/delete_time_ran/<int:id>', methods=['GET', 'POST'])
+@login_required
+def delete_time_ran(id):
     try:
-        int_code = int(code)
-        if len(code) == 8:
-            #code is already a hex code with decimals only
-            pass
-        else:
-            if int_code < 100000:
-                #student code
-                is_rfid_code = False
-            else:
-                #a decimal number that needs to be converted
-                h = '{:0>8}'.format(hex(int_code).split('x')[-1].upper())
-                code = h[6:8] + h[4:6] + h[2:4] + h[0:2]
-    except:
-        #the code contains hex characters, hence is already correct
-        pass
-    return is_rfid_code, code
+        registration = Registration.query.get(id)
+        registration.time_ran = None
+        db.session.commit()
+    except Exception as e:
+        flash('Kan tijd niet verwijderen')
+        log.error('cannot delete  time ran : {}'.format(e))
+
+    _filter, _filter_form, a,b, c = build_filter(tables_configuration['registration'])
+    return render_template('base_multiple_items.html',
+                           title='registraties',
+                           filter=_filter, filter_form=_filter_form,
+                           config = tables_configuration['registration'])
+
+
 
 #show a list of registrations
 @registration.route('/registration', methods=['GET', 'POST'])
@@ -163,97 +149,90 @@ def register():
 
     try:
         if 'code' in request.form:
-            is_rfid_code, code = decode_code(request.form['code'])
-            print('{} {}'.format(is_rfid_code, code))
+            is_valid_code, is_rfid_code, code = process_code(request.form['code'])
+            print('{} {} {}'.format(is_valid_code, is_rfid_code, code))
 
+            reg = Registration.query.join(Series)
             if is_rfid_code:
-                reg = Registration.query.filter(Registration.rfidcode2 == code).first()
+                reg = reg.filter(Registration.rfidcode2 == code).first()
                 if not reg:
-                    Registration.query.filter(Registration.rfidcode == code).first()
+                    reg.filter(Registration.rfidcode == code).first()
             else:
-                reg = Registration.query.filter(Registration.studentcode == code).first()
+                #code is a student code
+                reg = reg.filter(Registration.studentcode == code).first()
             if reg:
                 print(reg)
+                now = datetime.datetime.now()
+                starttime = reg.series.starttime
+                d = now - starttime
+                reg.time_ran = d.seconds * 1000 + d.microseconds/1000
+                db.session.commit()
     except:
         pass
 
 
     series = Series.query.order_by(Series.sequence).all()
-    #
-    # try:
-    #     if 'code' in request.form:
-    #         code = request.form['code'].upper()
-    #         if 'add_student' in request.form:
-    #             if request.form['add_student']=='Bewaar': #s
-    # ave new student
-    #                 first_name = request.form['new_first_name']
-    #                 last_name = request.form['new_last_name']
-    #                 classgroup = request.form['new_classgroup']
-    #                 if last_name == '' or first_name == '' or classgroup == '':
-    #                     flash('Naam en/of klas is niet volledig, probeer opnieuw')
-    #                     log.info('add student : bad name and/or classgroup')
-    #                 else:
-    #                     registration = Registration(first_name=first_name, last_name=last_name, student_code=code, classgroup=classgroup)
-    #                     db.session.add(registration)
-    #                     db.session.commit()
-    #                     flash(u'Nieuwe student: {} {} {} met code {}'.format(first_name, last_name, classgroup, code))
-    #                     log.info(u'added student : {} {} {} with code {}'.format(first_name, last_name, classgroup, code))
-    #         else:
-    #             registration_id = int(request.form['registration_id'])
-    #             try:
-    #                 test_code = int(code) #check if it is an integer, in which case, try to find  it in the database
-    #                 registration = Registration.query.filter(Registration.studentcode == code).first()
-    #                 if registration:
-    #                     student_name = u'{} {}'.format(registration.first_name, registration.last_name)
-    #                     student_code = u'{}'.format(code)
-    #                     classgroup = registration.classgroup
-    #                     registration_id = registration.id
-    #                 else:
-    #                     #new student, code should start at 20000
-    #                     if test_code >= 20000:
-    #                         new_student = True
-    #                         registration_id = test_code
-    #                         barcode = code  #show student code
-    #                     else:
-    #                         flash(u'Onbekende code.  Nieuwe leerlingcode start vanaf 20000')
-    #                         log.info(u'unknown code.  New studentcode starts from 20000')
-    #                         registration_id = -1
-    #             except:
-    #                 if code[:3] == 'URS':
-    #                     #add a computer code.  Old computer code will be overwritten
-    #                     registration = Registration.query.get(registration_id)
-    #                     if registration:
-    #                         registration.computer_code = None if code == u'URSDELETE' else code
-    #                         registration.timestamp = datetime.datetime.now()
-    #                         registration.user_id = current_user.id
-    #                         db.session.commit()
-    #                         log.info(u'assigned pc {} to student code {}'.format(code, registration.student_code))
-    #                         registration_id = -1
-    #                     else:
-    #                         flash(u'Eerst leerlingcode ingeven')
-    #                         log.info(u'First enter student code')
-    #                         registration_id = -1
-    #                 else:
-    #                     flash(u'Onbekende code.  Code moet beginnen met een cijfer of URS')
-    #                     log.info(u'unknown code (does not start with a cypher or URS)')
-    #                     registration_id = -1
-    #
-    # except IntegrityError as e: #computer code already present
-    #     db.session.rollback()
-    #     r = Registration.query.filter(Registration.computer_code==code).first()
-    #     flash(u'Deze computer code is reeds toegewezen aan {} {}'.format(r.last_name, r.first_name))
-    #     log.warning(u'PC {} is already assigned to {}.  error {}'.format(code, r.student_code, e))
-    #     registration_id = -1
-    # except Exception as e:
-    #     db.session.rollback()
-    #     flash(u'Onbekende fout, probeer opnieuw')
-    #     log.warning(u'unknow error : {}'.format(e))
-    #     registration_id = -1
-
     registrations=[]
 
+    registrations = Registration.query.filter(Registration.time_ran > 0).order_by(Registration.time_ran.desc()).slice(0, 30).all()
 #    registrations = Registration.query.filter(Registration.computer_code<>'', Registration.user_id==current_user.id).order_by(Registration.timestamp.desc()).all()
     return render_template('registration/registration.html',
                            series = series,
                            registrations=registrations)
 
+
+def process_code(code):
+    def process_int_code(code):
+        if int(code) < 100000:
+            #Assumed a student code because it is less then 100.000
+            return False, code
+        h = '{:0>8}'.format(hex(int(code)).split('x')[-1].upper())
+        code = h[6:8] + h[4:6] + h[2:4] + h[0:2]
+        return True, code
+
+    def decode_caps_lock(code):
+        out = u''
+        dd = {u'&': '1', u'É': '2', u'"': '3', u'\'': '4', u'(': '5', u'§': '6', u'È': '7', u'!': '8', u'Ç': '9',
+              u'À': '0', u'A' : 'A', u'B' : 'B', u'C' : 'C', u'D' : 'D', u'E' : 'E', u'F' : 'F'}
+        for i in code:
+            out += dd[i]
+        return out
+
+    is_rfid_code = True
+    is_valid_code = True
+    code = code.upper()
+
+    if len(code) == 8:
+        #Assumed a HEX code of 8 characters
+        if 'Q' in code:
+            # This is a HEX code, with the Q iso A
+            code = code.replace('Q', 'A')
+        try:
+            #Code is ok
+            int(code, 16)
+        except:
+            try:
+                # decode because of strange characters (CAPS LOCK)
+                code = decode_caps_lock(code)
+                int(code, 16)
+            except:
+                #It shoulde be a HEX code but it is not valid
+                is_valid_code = False
+    else:
+        #Assumed an INT code
+        try:
+            #code is ok
+            int(code)
+            is_rfid_code, code = process_int_code(code)
+        except:
+            try:
+                # decode because of strange characters (CAPS LOCK)
+                code = decode_caps_lock(code)
+                #code is ok
+                int(code)
+                is_rfid_code, code = process_int_code(code)
+            except:
+                #It should be an INT code but it is not valid
+                is_valid_code = False
+
+    return is_valid_code, is_rfid_code, code

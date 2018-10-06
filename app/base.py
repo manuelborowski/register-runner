@@ -7,7 +7,7 @@ from flask_login import current_user
 from sqlalchemy import or_
 import time, datetime
 
-from models import User, Settings, Registration
+from models import User, Settings, Registration, Series
 from . import log
 
 class InlineButtonWidget(object):
@@ -69,6 +69,9 @@ def build_filter(table, paginate=True):
     _template = table['template']
     _filtered_list = _model.query
 
+    if _model is Registration:
+        _filtered_list = _filtered_list.join(Series)
+
     if 'query_filter' in table:
         _filtered_list = table['query_filter'](_filtered_list)
 
@@ -89,10 +92,19 @@ def build_filter(table, paginate=True):
             search_constraints.append(Registration.first_name.like(search_value))
         if Registration.last_name in column_list:
             search_constraints.append(Registration.last_name.like(search_value))
-        if Registration.computer_code in column_list:
-            search_constraints.append(Registration.computer_code.like(search_value))
+        if Registration.classgroup in column_list:
+            search_constraints.append(Registration.classgroup.like(search_value))
         if Registration.studentcode in column_list:
             search_constraints.append(Registration.studentcode.like(search_value))
+        if Registration.rfidcode in column_list:
+            search_constraints.append(Registration.rfidcode.like(search_value))
+        if Registration.rfidcode2 in column_list:
+            search_constraints.append(Registration.rfidcode2.like(search_value))
+
+        if Series.name in column_list:
+            search_constraints.append(Series.name.like(search_value))
+
+
         if User.username in column_list:
             search_constraints.append(User.username.like(search_value))
         if User.first_name in column_list:
@@ -233,5 +245,8 @@ def get_global_setting_current_schoolyear():
 def set_global_setting_current_schoolyear(value):
     return set_setting('current_schoolyear', str(value), 1)
 
+######################################################################################################
+###                                       Utility functions
+######################################################################################################
 
 

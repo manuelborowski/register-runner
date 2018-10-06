@@ -9,6 +9,8 @@ fmi_change_pwd = {"menu_id": "change_pwd_menu_item", "menu_text": "Verander pasw
 fmi_update_rfid = {"menu_id": "update_rfid_menu_item", "menu_text": "Nieuwe code", "route": "new_rfid","flags": ["bootbox_single"]}
 fmi_delete_rfid = {"menu_id": "delete_rfid_item", "menu_text": "Verwijder code", "route": "delete_rfid", \
                    "message" : "Zeker dat u deze rfid code wil verwijderen?", "flags": ["confirm_before_delete"]}
+fmi_delete_time_ran = {"menu_id": "delete_time_ran_menu_item", "menu_text": "verwijder gelopen tijd", "route": "delete_time_ran", \
+                    "message" : "Zeker dat u deze tijd wil verwijderen?","flags": ["confirm_before_delete"]}
 
 default_menu_config = [
     fmi_edit,
@@ -38,5 +40,6 @@ offence_menu_config = [
 
 register_runner_menu_config = [
     fmi_update_rfid,
-    fmi_delete_rfid
+    fmi_delete_rfid,
+    fmi_delete_time_ran
 ]

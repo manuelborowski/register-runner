@@ -16,7 +16,7 @@ import flask_excel as excel
 app = Flask(__name__, instance_relative_config=True)
 
 #enable logging
-LOG_HANDLE = 'SB'
+LOG_HANDLE = 'RR'
 log = logging.getLogger(LOG_HANDLE)
 
 # local imports
@@ -43,13 +43,22 @@ class MyLogFilter(logging.Filter):
         record.username = current_user.username if current_user and current_user.is_active else 'NONE'
         return True
 
+def ms2m_s_ms(value):
+    if value:
+        min = value/60000
+        sec = int((value - min*60000)/1000)
+        msec = value - min*60000 - sec*1000
+        return('{}:{:02d},{}'.format(min, sec, msec))
+    else:
+        return None
+
 
 def create_app(config_name):
     global app
     global log
 
     #set up logging
-    LOG_FILENAME = os.path.join(sys.path[0], app_config[config_name].STATIC_PATH, 'log/cr-log.txt')
+    LOG_FILENAME = os.path.join(sys.path[0], app_config[config_name].STATIC_PATH, 'log/rr-log.txt')
     try:
         log_level = getattr(logging, app_config[config_name].LOG_LEVEL)
     except:
@@ -61,10 +70,12 @@ def create_app(config_name):
     log_handler.setFormatter(log_formatter)
     log.addHandler(log_handler)
 
-    log.info('start SB')
+    log.info('start RR')
 
     app.config.from_object(app_config[config_name])
     app.config.from_pyfile('config.py')
+
+    app.jinja_env.filters['milliseconds_to_minutes_seconds'] = ms2m_s_ms
 
     Bootstrap(app)
 

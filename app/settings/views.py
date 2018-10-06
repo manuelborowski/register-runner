@@ -83,10 +83,14 @@ def import_students(rfile):
             rrf.reeksen.name_columns_by_row(0)
             series_dict = {}
             for i in range(rrf.reeksen.number_of_rows()):
-                print(rrf.reeksen[i, 'NAAM'], rrf.reeksen[i, 'VOLGORDE'])
-                ns = Series(name=rrf.reeksen[i, 'NAAM'], sequence=rrf.reeksen[i, 'VOLGORDE'])
-                series_dict[rrf.reeksen[i, 'NUMMER']] = ns
-                db.session.add(ns)
+                if rrf.reeksen[i, 'NAAM'] != '' and rrf.reeksen[i, 'VOLGORDE'] != '' and rrf.reeksen[i, 'NUMMER'] != '':
+                    find_series = Series.query.filter(Series.name == rrf.reeksen[i, 'NAAM']).first()
+                    if find_series:
+                        series_dict[rrf.reeksen[i, 'NUMMER']] = find_series
+                    else:
+                        ns = Series(name=rrf.reeksen[i, 'NAAM'], sequence=rrf.reeksen[i, 'VOLGORDE'])
+                        series_dict[rrf.reeksen[i, 'NUMMER']] = ns
+                        db.session.add(ns)
             db.session.commit()
         except Exception as e:
             flash('Kan blad \'reeksen\' niet vinden')
@@ -97,20 +101,35 @@ def import_students(rfile):
         try:
             rrf.studenten.name_columns_by_row(0)
             empty_rfid_ctr = 0
+            find_student = Registration.query.filter(Registration.rfidcode.like('LEEG#%')).order_by(Registration.rfidcode.desc()).first()
+            if find_student:
+                empty_rfid_ctr = int(find_student.rfidcode.split('#')[-1]) + 1
+            nbr_students = 0
             for i in range(rrf.studenten.number_of_rows()):
-                print(u'{} {}'.format(rrf.studenten[i, 'NAAM'], rrf.studenten[i, 'VOORNAAM']))
-                if rrf.studenten[i, 'RFID'] == '':
-                    rfidcode = 'LEEG#{}'.format(empty_rfid_ctr)
-                    empty_rfid_ctr += 1
+                if rrf.studenten[i, 'VOORNAAM'] != '' and rrf.studenten[i, 'NAAM'] != '' and \
+                    rrf.studenten[i, 'KLAS'] != '' and rrf.studenten[i, 'LEERLINGNUMMER'] != '' and \
+                    rrf.studenten[i, 'REEKS'] != '':
+                    find_student = Registration.query.filter(Registration.studentcode == rrf.studenten[i, 'LEERLINGNUMMER']).first()
+                    if not find_student:
+                        if rrf.studenten[i, 'RFID'] == '':
+                            rfidcode = 'LEEG#{}'.format(empty_rfid_ctr)
+                            empty_rfid_ctr += 1
+                        else:
+                            rfidcode = rrf.studenten[i, 'RFID']
+                        nr = Registration(first_name = rrf.studenten[i, 'VOORNAAM'], last_name=rrf.studenten[i, 'NAAM'], \
+                                        classgroup = rrf.studenten[i, 'KLAS'],
+                                        studentcode = rrf.studenten[i, 'LEERLINGNUMMER'],
+                                        rfidcode = rfidcode,
+                                        series=series_dict[int(rrf.studenten[i, 'REEKS'])])
+                        db.session.add(nr)
+                        nbr_students += 1
+                    else:
+                        log.warning('student with code {} already present, skip'.format(rrf.studenten[i, 'LEERLINGNUMMER']))
                 else:
-                    rfidcode = rrf.studenten[i, 'RFID']
-                nr = Registration(first_name = rrf.studenten[i, 'VOORNAAM'], last_name=rrf.studenten[i, 'NAAM'], \
-                                classgroup = rrf.studenten[i, 'KLAS'],
-                                studentcode = rrf.studenten[i, 'LEERLINGNUMMER'],
-                                rfidcode = rfidcode,
-                                series=series_dict[int(rrf.studenten[i, 'REEKS'])])
-                db.session.add(nr)
+                    log.warning('could not add student : {}'.format(i))
             db.session.commit()
+            log.info('import: added {} students'.format(nbr_students))
+            flash('{} leerlingen zijn geimporteerd'.format(nbr_students))
         except Exception as e:
             flash('Probleem met excel-blad \'studenten\'')
             log.warning('cannot find sheet studenten: {}'.format(e))
@@ -118,34 +137,6 @@ def import_students(rfile):
     except Exception as e:
         flash('Kan bestand niet importeren')
         log.warning('cannot import: {}'.format(e))
-
-
-    # try:
-    #     # format csv file :
-    #     log.info('Import students from : {}'.format(rfile))
-    #     students_file = csv.DictReader(rfile,  delimiter=';')
-    #     #students_file = csv.DictReader(rfile,  delimiter=';', encoding='utf-8-sig')
-    #
-    #     nbr_students = 0
-    #     for s in students_file:
-    #         #skip empy records
-    #         if s['LEERLINGNUMMER'] != '' and s['VOORNAAM'] != '' and s['NAAM'] != '' and s['KLAS'] != '':
-    #             #add student, if not already present
-    #             find_student=Registration.query.filter(Registration.first_name == s['VOORNAAM'], Registration.last_name == s['NAAM'],
-    #                                                    Registration.studentcode == s['LEERLINGNUMMER'], Registration.classgroup == s['KLAS']).first()
-    #             if not find_student:
-    #                 student = Registration(first_name=s['VOORNAAM'], last_name=s['NAAM'], student_code=s['LEERLINGNUMMER'], classgroup=s['KLAS'])
-    #                 db.session.add(student)
-    #                 nbr_students += 1
-    #
-    #     db.session.commit()
-    #     log.info('import: added {} students'.format(nbr_students))
-    #     flash('Leerlingen zijn geimporteerd')
-    #
-    # except Exception as e:
-    #     flash('Kan bestand niet importeren')
-    #     log.warning('cannot import students')
-    # return redirect(url_for('settings.show'))
 
 #export a list of assets
 @settings.route('/settings/export', methods=['GET', 'POST'])

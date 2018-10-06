@@ -20,7 +20,7 @@
                         {% for s in series %}
                             <tr>
                                 <td>{{s.name}}</td>
-                                <<td>
+                                <td>
                                     <a id="start_{{s.id}}" href="javascript:start_timer({{s.id}})" style="color:{% if s.running %}red{% else %}green{% endif %}">
                                         START</a>
                                     <a id="reset_{{s.id}}" href="javascript:reset_timer({{s.id}})" style="color:black">
@@ -54,10 +54,10 @@
                     <tbody>
                     {% for r in registrations %}
                         <tr>
-                            <td>{{r.student_code}}</td>
                             <td>{{r.first_name}} {{r.last_name}}</td>
                             <td>{{r.classgroup}}</td>
-                            <td>{{r.computer_code}}</td>
+                            <td>{{r.series.name}}</td>
+                            <td>{{r.time_ran|milliseconds_to_minutes_seconds}}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

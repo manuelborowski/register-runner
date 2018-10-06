@@ -78,7 +78,7 @@
 
 <div id="menu">
     {% for i in config.floating_menu %}
-        <a id="{{i['menu_id']}}" onclick="handle_floating_menu('{{i['menu_id']}}')">{{i['menu_text']}}</a>
+        <a style="width:200px;font-size:13px" id="{{i['menu_id']}}" onclick="handle_floating_menu('{{i['menu_id']}}')">{{i['menu_text']}}</a>
     {% endfor %}
 </div>
 {% endblock %}
@@ -223,6 +223,7 @@ $(document).ready(function() {
     function menu(x, y) {
       i.top = y + "px";
       i.left = x + "px";
+      i.width = "200px";
       i.visibility = "visible";
       i.opacity = "1";
     }
