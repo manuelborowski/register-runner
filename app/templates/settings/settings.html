@@ -12,11 +12,24 @@
         <h1>Instellingen</h1>
         <form method="post" enctype=multipart/form-data>
             {% if current_user.is_admin %}
-                <input class="btn btn-default" type="button" id="import" value="Importeer studenten"  onclick="$('#import_fileid').click();">
-                <input id='import_fileid' type='file' name='upload_students' style="display:none" accept=".xlsm,.xlsx" onchange="$('#upload_trigger').click();">
-                <input id="upload_trigger" type="submit" value="Import" style="display:none" formaction="{{ url_for('settings.upload_file') }}">
-                <input class="btn btn-default" type="submit" id="export" value="Exporteer registraties"  formaction="{{url_for('settings.exportcsv')}}">
-                <input class="btn btn-default" type="button" value="Purge database" onclick="confirm_before_delete()">
+                <div class="form-group">
+                    <div class="row">
+                        <input class="btn btn-default" type="button" id="import" value="Importeer studenten"  onclick="$('#import_fileid').click();">
+                        <input id='import_fileid' type='file' name='upload_students' style="display:none" accept=".xlsm,.xlsx" onchange="$('#upload_trigger').click();">
+                        <input id="upload_trigger" type="submit" value="Import" style="display:none" formaction="{{ url_for('settings.upload_file') }}">
+                    </div>
+                    <div class="row">
+                        <input class="btn btn-default" type="submit" id="export" value="Exporteer registraties"  formaction="{{url_for('settings.exportcsv')}}">
+                    </div>
+                    <div class="row">
+                        <input class="btn btn-default" type="button" value="Wis database"
+                               onclick="confirm_before_delete('Bent u zeker dat u de database wil wissen?', 'settings.purge_database')">
+                    </div>
+                    <div class="row">
+                        <input class="btn btn-default" type="button" value="Wis tijden"
+                               onclick="confirm_before_delete('Bent u zeker dat u de tijden wil wissen?', 'settings.purge_times')">
+                    </div>
+                </div>
             {% endif %}
         </form>
         <br/>
@@ -55,10 +68,10 @@
 {{ super() }}
 <script>
 //Before removing an entry, a confirm-box is shown.
-function confirm_before_delete(e) {
-    bootbox.confirm("Bent u zeker dat u de database wil leeg maken?", function(result) {
+function confirm_before_delete(message, url) {
+    bootbox.confirm(message, function(result) {
         if (result) {
-            window.location.href = Flask.url_for('settings.purge_database')
+            window.location.href = Flask.url_for(url)
         }
     });
 }

@@ -5,7 +5,7 @@ from flask import render_template, redirect, url_for, request, flash, send_file,
 from flask_login import login_required
 from ..base import get_global_setting_current_schoolyear, set_global_setting_current_schoolyear, get_setting_simulate_dayhour, set_setting_simulate_dayhour
 from . import settings
-from .. import db, app, log
+from .. import db, app, log, ms2m_s_ms
 from ..models import Settings, Registration, Series
 from flask_login import current_user
 
@@ -48,6 +48,18 @@ def purge_database():
     except Exception as e:
         flash('Kan niet verwijderen...')
     return redirect(url_for('settings.show'))
+
+@settings.route('/settings/purge_times', methods=['GET', 'POST'])
+@login_required
+def purge_times():
+    try:
+        Registration.query.update(dict(time_ran=None))
+        Series.query.update(dict(running=False, starttime=None))
+        db.session.commit()
+    except Exception as e:
+        flash('Kan niet verwijderen...')
+    return redirect(url_for('settings.show'))
+
 
 
 @settings.route('/settings/upload_file', methods=['GET', 'POST'])
@@ -149,20 +161,23 @@ def exportcsv():
         'VOORNAAM',
         'KLAS',
         'LEERLINGNUMMER',
-        'COMPUTER',
         'TIJD',
+        'TIJD(MS)',
+        'SERIE'
     ]
 
     rows = []
-    for r in Registration.query.all():
+    for r in Registration.query.join(Series).all():
+        time_ran = ms2m_s_ms(r.time_ran)
         rows.append(
             {
                 'NAAM': r.last_name,
                 'VOORNAAM': r.first_name,
                 'KLAS' : r.classgroup,
-                'LEERLINGNUMMER': r.student_code,
-                'COMPUTER': r.computer_code,
-                'TIJD': r.timestamp,
+                'LEERLINGNUMMER': r.studentcode,
+                'TIJD': time_ran,
+                'TIJD(MS)': r.time_ran,
+                'SERIE': r.series.name
             }
         )
 

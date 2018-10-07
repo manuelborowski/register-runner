@@ -89,7 +89,7 @@ class Series(db.Model):
     registration = db.relationship('Registration', cascade='all, delete', backref='series', lazy='dynamic')
 
     def __repr__(self):
-        return '<Series>: {}/{}/{}/{}'.format(self.id, self.name, self.sequence, self.starttime)
+        return u'<Series>: {}/{}/{}/{}'.format(self.id, self.name, self.sequence, self.starttime)
 
     def ret_dict(self):
         return {'id': self.id, 'name': self.name, 'sequence': self.sequence, 'starttime': self.starttime}
@@ -108,7 +108,7 @@ class Registration(db.Model):
     series_id = db.Column(db.Integer, db.ForeignKey('series.id', ondelete='CASCADE'))
 
     def __repr__(self):
-        return '<Registration: {}/{}/{}/{}/{}/{}/{}/{}'.format(self.id, self.first_name, self.last_name, self.classgroup,
+        return u'<Registration: {}/{}/{}/{}/{}/{}/{}/{}'.format(self.id, self.first_name, self.last_name, self.classgroup,
                                                          self.studentcode, self.rfidcode, self.rfidcode2, self.time_ran)
 
     def ret_dict(self):

@@ -147,36 +147,39 @@ def delete_time_ran(id):
 @login_required
 def register():
 
+    registration_succes = 1
     try:
         if 'code' in request.form:
             is_valid_code, is_rfid_code, code = process_code(request.form['code'])
-            print('{} {} {}'.format(is_valid_code, is_rfid_code, code))
+            #print('{} {} {}'.format(is_valid_code, is_rfid_code, code))
 
             reg = Registration.query.join(Series)
             if is_rfid_code:
-                reg = reg.filter(Registration.rfidcode2 == code).first()
-                if not reg:
-                    reg.filter(Registration.rfidcode == code).first()
+                reg2 = reg.filter(Registration.rfidcode2 == code).first()
+                if not reg2:
+                    reg2 = reg.filter(Registration.rfidcode == code).first()
             else:
                 #code is a student code
-                reg = reg.filter(Registration.studentcode == code).first()
-            if reg:
-                print(reg)
+                reg2 = reg.filter(Registration.studentcode == code).first()
+            if reg2:
+                #print(u'{}'.format(reg2))
                 now = datetime.datetime.now()
-                starttime = reg.series.starttime
+                starttime = reg2.series.starttime
                 d = now - starttime
-                reg.time_ran = d.seconds * 1000 + d.microseconds/1000
+                reg2.time_ran = d.seconds * 1000 + d.microseconds/1000
                 db.session.commit()
-    except:
-        pass
-
+            else:
+                registration_succes = 0
+    except Exception as e:
+        log.error(u'Cannot register student: {}'.format(e))
+        registration_succes = 0
 
     series = Series.query.order_by(Series.sequence).all()
     registrations=[]
 
     registrations = Registration.query.filter(Registration.time_ran > 0).order_by(Registration.time_ran.desc()).slice(0, 30).all()
-#    registrations = Registration.query.filter(Registration.computer_code<>'', Registration.user_id==current_user.id).order_by(Registration.timestamp.desc()).all()
     return render_template('registration/registration.html',
+                           registration_succes = registration_succes,
                            series = series,
                            registrations=registrations)
 

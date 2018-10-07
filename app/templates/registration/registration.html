@@ -8,7 +8,7 @@
 {% block content2 %}
  <div class="content-section">
   {{ utils.flashed_messages() }}
-    <div class="center">
+    <div class="center" id="flash_registration">
         <div class="container">
             <div class="col-sm-3">
                 <div class="form-group row">
@@ -114,7 +114,17 @@
          });
     }
 
-    $(window).load(get_timer_value())
+    $(window).load(function() {
+        i = document.getElementById("flash_registration").style;
+        //i.background="white";
+        if({{registration_succes}}) {
+            i.background="lightgreen";
+        } else {
+            i.background="red";
+        }
+        setTimeout(function() {i.background="white";}, 100);
+        get_timer_value();
+    });
 
 </script>
 
