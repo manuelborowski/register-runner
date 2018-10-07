@@ -53,7 +53,7 @@ def purge_database():
 @login_required
 def purge_times():
     try:
-        Registration.query.update(dict(time_ran=None))
+        Registration.query.update(dict(time_ran=None, time_registered=None))
         Series.query.update(dict(running=False, starttime=None))
         db.session.commit()
     except Exception as e:

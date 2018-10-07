@@ -53,6 +53,7 @@ def reset(id):
     try:
         series = Series.query.get(id)
         series.running = False
+        series.starttime = None
         db.session.commit()
     except Exception as e:
         log.error('cannot start/stop timer of series : {} error {}'.format(series.name, e))
@@ -129,6 +130,7 @@ def delete_time_ran(id):
     try:
         registration = Registration.query.get(id)
         registration.time_ran = None
+        registration.time_registered = None
         db.session.commit()
     except Exception as e:
         flash('Kan tijd niet verwijderen')
@@ -167,6 +169,7 @@ def register():
                 starttime = reg2.series.starttime
                 d = now - starttime
                 reg2.time_ran = d.seconds * 1000 + d.microseconds/1000
+                reg2.time_registered = now
                 db.session.commit()
             else:
                 registration_succes = 0
@@ -177,7 +180,7 @@ def register():
     series = Series.query.order_by(Series.sequence).all()
     registrations=[]
 
-    registrations = Registration.query.filter(Registration.time_ran > 0).order_by(Registration.time_ran.desc()).slice(0, 30).all()
+    registrations = Registration.query.filter(Registration.time_registered > 0).order_by(Registration.time_registered.desc()).slice(0, 30).all()
     return render_template('registration/registration.html',
                            registration_succes = registration_succes,
                            series = series,

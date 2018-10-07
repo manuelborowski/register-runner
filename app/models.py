@@ -105,6 +105,7 @@ class Registration(db.Model):
     rfidcode = db.Column(db.String(256), unique=True)
     rfidcode2 = db.Column(db.String(256), unique=True)
     time_ran = db.Column(db.Integer)
+    time_registered = db.Column(db.DateTime())
     series_id = db.Column(db.Integer, db.ForeignKey('series.id', ondelete='CASCADE'))
 
     def __repr__(self):
