@@ -12,6 +12,7 @@ from flask_jsglue import JSGlue
 from werkzeug.routing import IntegerConverter as OrigIntegerConvertor
 import config, logging, logging.handlers, os, sys
 import flask_excel as excel
+import random
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -85,6 +86,8 @@ def create_app(config_name):
     excel.init_excel(app)
 
     app.url_map.converters['int'] = IntegerConverter
+
+    random.seed()
 
     if not config.DB_TOOLS:
         login_manager.init_app(app)

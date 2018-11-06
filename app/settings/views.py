@@ -12,6 +12,7 @@ from flask_login import current_user
 import unicodecsv as csv
 import cStringIO, csv
 import pyexcel
+import random
 
 def check_admin():
     if not current_user.is_admin:
@@ -61,6 +62,19 @@ def purge_times():
     return redirect(url_for('settings.show'))
 
 
+@settings.route('/settings/random_times', methods=['GET', 'POST'])
+@login_required
+def random_times():
+    try:
+        rl = Registration.query.all()
+        for r in rl:
+            r.time_ran  = random.randint(300000, 1800000) #random time between 5 and 30 minutes
+        db.session.commit()
+    except Exception as e:
+        flash('Kan geen willekeurige tijden toevoegen...')
+    return redirect(url_for('settings.show'))
+
+
 
 @settings.route('/settings/upload_file', methods=['GET', 'POST'])
 @login_required
@@ -73,6 +87,7 @@ def upload_file():
 #sheet "studenten"
 #NAAM           last_name
 #VOORNAAM       first_name
+#GESLACHT       gender
 #LEERLINGNUMMER studentcode
 #KLAS           classgroup
 #RFID           rfidcode
@@ -120,7 +135,7 @@ def import_students(rfile):
             for i in range(rrf.studenten.number_of_rows()):
                 if rrf.studenten[i, 'VOORNAAM'] != '' and rrf.studenten[i, 'NAAM'] != '' and \
                     rrf.studenten[i, 'KLAS'] != '' and rrf.studenten[i, 'LEERLINGNUMMER'] != '' and \
-                    rrf.studenten[i, 'REEKS'] != '':
+                    rrf.studenten[i, 'REEKS'] != '' and rrf.studenten[i, 'GESLACHT'] != '':
                     find_student = Registration.query.filter(Registration.studentcode == rrf.studenten[i, 'LEERLINGNUMMER']).first()
                     if not find_student:
                         if rrf.studenten[i, 'RFID'] == '':
@@ -129,6 +144,7 @@ def import_students(rfile):
                         else:
                             rfidcode = rrf.studenten[i, 'RFID']
                         nr = Registration(first_name = rrf.studenten[i, 'VOORNAAM'], last_name=rrf.studenten[i, 'NAAM'], \
+                                        gender = rrf.studenten[i, 'GESLACHT'],
                                         classgroup = rrf.studenten[i, 'KLAS'],
                                         studentcode = rrf.studenten[i, 'LEERLINGNUMMER'],
                                         rfidcode = rfidcode,
@@ -159,6 +175,7 @@ def exportcsv():
     headers = [
         'NAAM',
         'VOORNAAM',
+        'GESLACHT',
         'KLAS',
         'LEERLINGNUMMER',
         'TIJD',
@@ -173,6 +190,7 @@ def exportcsv():
             {
                 'NAAM': r.last_name,
                 'VOORNAAM': r.first_name,
+                'GESLACHT': r.gender,
                 'KLAS' : r.classgroup,
                 'LEERLINGNUMMER': r.studentcode,
                 'TIJD': time_ran,

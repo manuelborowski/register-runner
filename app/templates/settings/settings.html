@@ -29,34 +29,12 @@
                         <input class="btn btn-default" type="button" value="Wis tijden"
                                onclick="confirm_before_delete('Bent u zeker dat u de tijden wil wissen?', 'settings.purge_times')">
                     </div>
-                </div>
-            {% endif %}
-        </form>
-        <br/>
-        <br/>
-        <br/>
-        <form action="{{ url_for('settings.save')}}" method="post" class="form" role="form"  enctype=multipart/form-data>
-            {% if current_user.is_admin %}
-                <div class="form-group">
                     <div class="row">
-                        <div class="col-sm-1">
-                            <input type="text" class="form-control" id="schoolyear" name="schoolyear" value="{{ schoolyear }}">
-                        </div>
-                        <label for="schoolyear" class="col-sm-2 control-label">: Huidig schooljaar </label>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-1">
-                            <input type="text" class="form-control" id="simulate_dayhour" name="simulate_dayhour" value="{{ simulate_dayhour }}">
-                        </div>
-                        <label for="simulate_dayhour" class="col-sm-2 control-label">Simuleer een lesuur </label>
+                        <input class="btn btn-default" type="button" value="Willekeurige tijden"
+                               onclick="confirm_before_delete('Bent u zeker dat u willekeurige tijden wil geven?', 'settings.random_times')">
                     </div>
                 </div>
             {% endif %}
-
-
-            <input class="btn btn-default" id="submit" name="button" type="submit" value="Bewaar">
-
-
         </form>
     </div>
 </div>

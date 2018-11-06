@@ -16,37 +16,25 @@
 <!-- end message block -->
   <div class="center">
 {% if filter %}
-      <form method="post" enctype=multipart/form-data>
+  <form method="post" enctype=multipart/form-data>
       <table class="table-condensed ">
           <tr>
-{% if 'date' in filter %}
-              <th>Datum</th>
-{% endif %}
-{% if 'teacher' in filter %}
-              <th>Leerkracht</th>
-{% endif %}
-{% if 'classgroup' in filter %}
-              <th>Klas</th>
-{% endif %}
+            {% if 'gender' in filter %}
+              <th>Geslacht</th>
+            {% endif %}
+            {% if 'series' in filter %}
+              <th>Reeks</th>
+            {% endif %}
           </tr>
           <tr>
-{% if 'date' in filter %}
-              <td><input id="date_after" class="filter" name="date_after" type="text" size="12"></td>
-{% endif %}
-{% if 'teacher' in filter %}
-              <td rowspan="2"  >{{ wtf.form_field(filter_form.teacher.teacher) }}</td>
-{% endif %}
-{% if 'classgroup' in filter %}
-              <td rowspan="2"  >{{ wtf.form_field(filter_form.classgroup.classgroup) }}</td>
-{% endif %}
-          </tr>
-          <tr>
-{% if 'date' in filter %}
-              <td><input id="date_before" class="filter" name="date_before" type="text" size="12"></td>
-{% endif %}
+            {% if 'gender' in filter %}
+              <td>{{ wtf.form_field(filter_form.gender.gender) }}</td>
+            {% endif %}
+            {% if 'series' in filter %}
+              <td>{{ wtf.form_field(filter_form.series.series) }}</td>
+            {% endif %}
           </tr>
       </table>
-      <br>
       <div class="btn-group" role="group" aria-label="...">
           <a class="btn btn-default" id="filter">Filter</a>
           <a class="btn btn-default" id="clear">Wissen</a>
@@ -54,9 +42,9 @@
             <input class="btn btn-default" id="export" type="submit" value="Export"  formaction="{{ url_for(config.export) }}">
           {% endif %}
       </div>
-
+      <br>
+  </form>
 {% endif %}
-      </form>
       {% if not config.disable_add_button %}
       <hr />
       <form method ="post" action="{{ url_for(config.subject + '.add') }}" novalidate>
@@ -130,8 +118,8 @@ $(document).ready(function() {
     //The clear button of the filter is pushed
     $('#clear').click(function() {
         $('.filter').val('');
-        $('#teacher').val('');
-        $('#classgroup').val('');
+        $('#gender').val('');
+        $('#series').val('');
         //emulate click on trigger button
         $('#filter').trigger('click');
     });
@@ -140,20 +128,17 @@ $(document).ready(function() {
     //Get content from localstorage and store in fields
     try {
         filter_settings = JSON.parse(localStorage.getItem("Filter"));
-        $('#date_before').val(filter_settings['date_before']);
-        $('#date_after').val(filter_settings['date_after']);
-        $('#teacher').val(filter_settings['teacher']);
-        $('#classgroup').val(filter_settings['classgroup']);
+        $('#gender').val(filter_settings['gender']);
+        $('#series').val(filter_settings['series']);
     } catch (err) {
     }
 
     //The filter button of the filter is pushed
     $('#filter').click(function() {
         //Store filter in localstorage
-        filter_settings = {"date_before" : $('#date_before').val(),
-                   "date_after" : $('#date_after').val(),
-                   "teacher" : $('#teacher').val(),
-                   "classgroup" : $('#classgroup').val()
+        filter_settings = {
+                   "gender" : $('#gender').val(),
+                   "series" : $('#series').val()
                    };
         //alert(JSON.stringify(filter_settings));
         localStorage.setItem("Filter", JSON.stringify(filter_settings));

@@ -8,6 +8,7 @@ from sqlalchemy import or_
 import time, datetime
 
 from models import User, Settings, Registration, Series
+from .forms import GenderFilter, SeriesFilter
 from . import log
 
 class InlineButtonWidget(object):
@@ -78,6 +79,20 @@ def build_filter(table, paginate=True):
     _total_count = _filtered_list.count()
 
     _filter_forms = {}
+
+    #build the filter list
+    if 'gender' in _filters_enabled:
+        _filter_forms['gender'] = GenderFilter()
+        value = check_string_in_form('gender', request.values)
+        if value:
+            _filtered_list = _filtered_list.filter(Registration.gender == value)
+
+    if 'series' in _filters_enabled:
+        _filter_forms['series'] = SeriesFilter()
+        value = check_string_in_form('series', request.values)
+        if value:
+            _filtered_list = _filtered_list.filter(Series.name == value)
+
 
     #search, if required
     #from template, take order_by and put in a list.  This is user later on, to get the columns in which can be searched

@@ -100,6 +100,7 @@ class Registration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(256))
     last_name = db.Column(db.String(256))
+    gender = db.Column(db.String(256))
     classgroup = db.Column(db.String(256))
     studentcode = db.Column(db.String(256), unique=True)
     rfidcode = db.Column(db.String(256), unique=True)
@@ -109,11 +110,13 @@ class Registration(db.Model):
     series_id = db.Column(db.Integer, db.ForeignKey('series.id', ondelete='CASCADE'))
 
     def __repr__(self):
-        return u'<Registration: {}/{}/{}/{}/{}/{}/{}/{}'.format(self.id, self.first_name, self.last_name, self.classgroup,
+        return u'<Registration: {}/{}/{}/{}/{}/{}/{}/{}/{}'.format(self.id, self.first_name, self.last_name,
+                                                                   self.gender, self.classgroup,
                                                          self.studentcode, self.rfidcode, self.rfidcode2, self.time_ran)
 
     def ret_dict(self):
-        return {'id':self.id, 'first_name':self.first_name, 'last_name': self.last_name, 'classgroup': self.classgroup,
+        return {'id':self.id, 'first_name':self.first_name, 'last_name': self.last_name, 'gender': self.gender,
+                'classgroup': self.classgroup,
                 'full_name': u'{} {}'.format(self.first_name, self.last_name), 'rfidcode': self.rfidcode, 'rfidcode2': self.rfidcode2,
                 'studentcode': self.studentcode, 'time_ran': ms2m_s_ms(self.time_ran), 'series': self.series.ret_dict()}
 
