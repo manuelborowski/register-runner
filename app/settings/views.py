@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # app/settings/views.py
 
-from flask import render_template, redirect, url_for, request, flash, send_file, abort
+from flask import render_template, redirect, url_for, request, flash, send_file, abort, make_response
 from flask_login import login_required
 from ..base import get_global_setting_current_schoolyear, set_global_setting_current_schoolyear, get_setting_simulate_dayhour, set_setting_simulate_dayhour
 from . import settings
@@ -9,9 +9,9 @@ from .. import db, app, log, ms2m_s_ms
 from ..models import Settings, Registration, Series
 from flask_login import current_user
 
+from io import StringIO
 import unicodecsv as csv
-import cStringIO, csv
-import pyexcel
+import  csv
 import random
 
 def check_admin():
@@ -170,39 +170,38 @@ def import_students(rfile):
 @settings.route('/settings/export', methods=['GET', 'POST'])
 @login_required
 def exportcsv():
-    #The following line is required only to build the filter-fields on the page.
-    csv_file = cStringIO.StringIO()
-    headers = [
-        'NAAM',
-        'VOORNAAM',
-        'GESLACHT',
-        'KLAS',
-        'LEERLINGNUMMER',
-        'TIJD',
-        'TIJD(MS)',
-        'SERIE'
-    ]
+    try:
+        headers = [
+            'NAAM',
+            'VOORNAAM',
+            'GESLACHT',
+            'KLAS',
+            'LEERLINGNUMMER',
+            'TIJD',
+            'TIJD(MS)',
+            'SERIE'
+        ]
+        rows = []
+        for r in Registration.query.join(Series).all():
+            time_ran = ms2m_s_ms(r.time_ran)
+            rows.append((
+                    r.last_name,
+                    r.first_name,
+                    r.gender,
+                    r.classgroup,
+                    r.studentcode,
+                    time_ran,
+                    r.time_ran,
+                    r.series.name))
 
-    rows = []
-    for r in Registration.query.join(Series).all():
-        time_ran = ms2m_s_ms(r.time_ran)
-        rows.append(
-            {
-                'NAAM': r.last_name,
-                'VOORNAAM': r.first_name,
-                'GESLACHT': r.gender,
-                'KLAS' : r.classgroup,
-                'LEERLINGNUMMER': r.studentcode,
-                'TIJD': time_ran,
-                'TIJD(MS)': r.time_ran,
-                'SERIE': r.series.name
-            }
-        )
-
-    writer = csv.DictWriter(csv_file, headers, delimiter=';')
-    writer.writeheader()
-    for r in rows:
-        writer.writerow(dict((k, v.encode('utf-8') if type(v) is unicode else v) for k, v in r.iteritems()))
-    csv_file.seek(0)
-    log.info('exported students')
-    return send_file(csv_file, attachment_filename='registraties.csv', as_attachment=True)
+        si = StringIO()
+        cw = csv.writer(si, delimiter=';')
+        cw.writerow(headers)
+        cw.writerows(rows)
+        output = make_response(si.getvalue())
+        output.headers["Content-Disposition"] = "attachment; filename=registraties.csv"
+        output.headers["Content-type"] = "text/csv"
+        return output
+    except Exception as e:
+        log.error('Could not export file {}'.format(e))
+        return redirect(url_for('settings.show'))

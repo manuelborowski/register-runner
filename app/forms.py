@@ -3,7 +3,7 @@
 
 from flask_wtf import FlaskForm
 from wtforms import SelectField
-from models import Registration, Series
+from .models import Registration, Series
 from . import db
 
 

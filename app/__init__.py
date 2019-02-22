@@ -16,6 +16,12 @@ import random
 
 app = Flask(__name__, instance_relative_config=True)
 
+#V1.0 : rewordked to python 3
+
+@app.context_processor
+def inject_version():
+    return dict(version = 'V1.0')
+
 #enable logging
 LOG_HANDLE = 'RR'
 log = logging.getLogger(LOG_HANDLE)

@@ -11,7 +11,7 @@ from ..models import  Registration, Series
 from ..base import build_filter, get_ajax_table
 from ..tables_config import  tables_configuration
 
-import cStringIO, csv, re, datetime
+import datetime
 
 from sqlalchemy.exc import IntegrityError
 
@@ -201,7 +201,7 @@ def process_code(code):
         dd = {u'&': '1', u'É': '2', u'"': '3', u'\'': '4', u'(': '5', u'§': '6', u'È': '7', u'!': '8', u'Ç': '9',
               u'À': '0', u'A' : 'A', u'B' : 'B', u'C' : 'C', u'D' : 'D', u'E' : 'E', u'F' : 'F'}
         for i in code:
-            out += dd[i]
+            out += dd[i.upper()]
         return out
 
     is_rfid_code = True

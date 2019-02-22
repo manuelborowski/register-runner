@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from models import User, Registration, Series
-import user.extra_filtering
-from floating_menu import default_menu_config, register_runner_menu_config
+from .models import User, Registration, Series
+from .user.extra_filtering import filter
+from .floating_menu import default_menu_config, register_runner_menu_config
 
 tables_configuration = {
     'registration' : {
@@ -43,7 +43,7 @@ tables_configuration = {
         'href': [{'attribute': '["username"]', 'route': '"user.view"', 'id': '["id"]'},
                  ],
         'floating_menu' : default_menu_config,
-        'query_filter' : user.extra_filtering.filter,
+        'query_filter' : filter,
     }
 }
 
