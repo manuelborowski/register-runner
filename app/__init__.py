@@ -17,10 +17,11 @@ import random
 app = Flask(__name__, instance_relative_config=True)
 
 #V1.0 : rewordked to python 3
+#V1.1 : python 2 to 3 : zip() to list(zip())
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V1.0')
+    return dict(version = 'V1.1')
 
 #enable logging
 LOG_HANDLE = 'RR'

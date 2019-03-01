@@ -10,7 +10,6 @@ from ..models import Settings, Registration, Series
 from flask_login import current_user
 
 from io import StringIO
-import unicodecsv as csv
 import  csv
 import random
 

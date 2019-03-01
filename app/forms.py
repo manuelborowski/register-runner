@@ -12,7 +12,7 @@ class GenderFilter(FlaskForm):
         super(GenderFilter, self).__init__(*args, **kwargs)
         ql = [r.gender for r in  db.session.query(Registration.gender).distinct()]
         ql.insert(0, '')
-        self.gender.choices=zip(ql, ql)
+        self.gender.choices=list(zip(ql, ql))
 
     gender = SelectField('')
 
@@ -21,7 +21,7 @@ class SeriesFilter(FlaskForm):
         super(SeriesFilter, self).__init__(*args, **kwargs)
         ql = [s.name for s in  db.session.query(Series.name).distinct()]
         ql.insert(0, '')
-        self.series.choices=zip(ql, ql)
+        self.series.choices=list(zip(ql, ql))
 
     series = SelectField('')
 
